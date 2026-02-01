@@ -1,3 +1,6 @@
-/models/*
-/csv_data/*
-/data/*
+models/**
+csv_data/**
+data/**
+api_data/**
+analysis_data/**
+evaluation_data/**
