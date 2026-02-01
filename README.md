@@ -25,8 +25,12 @@
 
 ```
 Flood_prediction/
+├── analysis_data/             # 分析数据集
 ├── backend/              # Flask后端服务
 │   └── app.py         # API服务主文件
+├── csv_data/             # 原始数据集
+├── data/               # 预处理后的数据
+├── evaluation_data/             # 评估数据集
 ├── frontend/             # Vue前端项目
 │   └── src/
 │       ├── views/       # 页面组件
@@ -35,13 +39,12 @@ Flood_prediction/
 ├── models/              # 训练好的模型
 │   ├── lightgbm_model.txt
 │   └── feature_columns.pkl
+│   ├── feature_importance.pkl
 ├── notebooks/           # 数据分析和模型训练脚本
 │   ├── data_exploration.py
 │   ├── feature_engineering.py
 │   ├── model_training.py
 │   └── model_evaluation.py
-├── data/               # 预处理后的数据
-└── train.csv           # 原始训练数据
 ```
 
 ## 数据集
