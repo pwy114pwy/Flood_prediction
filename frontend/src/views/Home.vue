@@ -65,14 +65,14 @@
           <div class="model-overview">
             <el-descriptions :column="1" border>
               <el-descriptions-item label="模型名称">{{ modelInfo.modelName || 'LightGBM Regressor'
-                }}</el-descriptions-item>
+              }}</el-descriptions-item>
               <el-descriptions-item label="训练数据">{{ systemStats.totalRecords.toLocaleString() }} 行 × {{
                 systemStats.featureCount }} 特征</el-descriptions-item>
               <el-descriptions-item label="预测目标">{{ modelInfo.targetVariable || 'FloodProbability'
-                }}</el-descriptions-item>
+              }}</el-descriptions-item>
               <el-descriptions-item label="评估指标">MSE, RMSE, R²</el-descriptions-item>
               <el-descriptions-item label="API服务">{{ modelInfo.apiService || 'http://localhost:5000'
-                }}</el-descriptions-item>
+              }}</el-descriptions-item>
             </el-descriptions>
           </div>
         </el-card>
@@ -127,7 +127,7 @@
                 </el-card>
               </el-grid-item>
               <el-grid-item>
-                <el-card
+                <el-card @click="navigateTo('/docs')"
                   style="cursor: pointer; border-radius: 8px; text-align: center; padding: 30px 0; transition: all 0.3s"
                   hover>
                   <el-icon style="font-size: 32px; color: #F56C6C; margin-bottom: 12px">

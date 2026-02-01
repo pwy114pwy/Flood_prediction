@@ -5,6 +5,7 @@ const Home = () => import('../views/Home.vue');
 const DataExplore = () => import('../views/DataExplore.vue');
 const ModelEvaluation = () => import('../views/ModelEvaluation.vue');
 const Prediction = () => import('../views/Prediction.vue');
+const Docs = () => import('../views/Docs.vue');
 
 // 路由配置
 const routes = [
@@ -38,6 +39,14 @@ const routes = [
     component: Prediction,
     meta: {
       title: '预测分析'
+    }
+  },
+  {
+    path: '/docs',
+    name: 'Docs',
+    component: Docs,
+    meta: {
+      title: '文档中心'
     }
   },
   // 404页面
