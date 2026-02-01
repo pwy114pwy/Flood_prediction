@@ -24,13 +24,18 @@
                 <el-statistic :value="evaluationMetrics.testMetrics.r2.toFixed(3)" suffix="" title="R² 评分" />
               </el-col>
             </el-row>
-            <div
-              style="margin-top: 20px; padding: 15px; background-color: #f0f9eb; border-radius: 4px; border-left: 4px solid #67C23A">
-              <p style="color: #67C23A; margin: 0">
+            <div :style="{
+              marginTop: '20px',
+              padding: '15px',
+              backgroundColor: performanceLevel.bgColor,
+              borderRadius: '4px',
+              borderLeft: `4px solid ${performanceLevel.borderColor}`
+            }">
+              <p :style="{ color: performanceLevel.textColor, margin: 0 }">
                 <el-icon>
-                  <Check />
+                  <component :is="performanceLevel.icon" />
                 </el-icon>
-                <span style="margin-left: 8px">模型性能优秀，R²评分接近1，预测误差较小</span>
+                <span style="margin-left: 8px">{{ performanceDescription }}</span>
               </p>
             </div>
           </div>
@@ -154,9 +159,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import * as echarts from 'echarts';
-import { DataAnalysis, TrendCharts, Histogram, Setting, Timer, Check } from '@element-plus/icons-vue';
+import { DataAnalysis, TrendCharts, Histogram, Setting, Timer, Check, Warning, CircleClose } from '@element-plus/icons-vue';
 import axios from 'axios';
 
 let predictionsChart = null;
@@ -178,6 +183,57 @@ const modelParams = ref({
 
 // 训练信息
 const trainingInfo = ref({});
+
+// 计算性能描述
+const performanceDescription = computed(() => {
+  const r2 = evaluationMetrics.value.testMetrics.r2;
+  const rmse = evaluationMetrics.value.testMetrics.rmse;
+
+  if (r2 >= 0.9) {
+    return `模型性能优秀，R²评分为${r2.toFixed(3)}，预测误差较小（RMSE: ${rmse.toFixed(4)}）`;
+  } else if (r2 >= 0.8) {
+    return `模型性能良好，R²评分为${r2.toFixed(3)}，预测误差适中（RMSE: ${rmse.toFixed(4)}）`;
+  } else if (r2 >= 0.7) {
+    return `模型性能一般，R²评分为${r2.toFixed(3)}，预测误差较大（RMSE: ${rmse.toFixed(4)}）`;
+  } else {
+    return `模型性能较差，R²评分为${r2.toFixed(3)}，预测误差很大（RMSE: ${rmse.toFixed(4)}）`;
+  }
+});
+
+// 计算性能等级
+const performanceLevel = computed(() => {
+  const r2 = evaluationMetrics.value.testMetrics.r2;
+
+  if (r2 >= 0.9) {
+    return {
+      bgColor: '#f0f9eb',
+      borderColor: '#67C23A',
+      textColor: '#67C23A',
+      icon: Check
+    };
+  } else if (r2 >= 0.8) {
+    return {
+      bgColor: '#ecf5ff',
+      borderColor: '#409EFF',
+      textColor: '#409EFF',
+      icon: Check
+    };
+  } else if (r2 >= 0.7) {
+    return {
+      bgColor: '#fdf6ec',
+      borderColor: '#E6A23C',
+      textColor: '#E6A23C',
+      icon: Warning
+    };
+  } else {
+    return {
+      bgColor: '#fef0f0',
+      borderColor: '#F56C6C',
+      textColor: '#F56C6C',
+      icon: CircleClose
+    };
+  }
+});
 
 // 初始化预测值与真实值对比图
 const initPredictionsChart = async () => {

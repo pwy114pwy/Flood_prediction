@@ -6,7 +6,7 @@ import json
 import os
 from sklearn.metrics import mean_squared_error, r2_score
 
-base_path = 'd:\\Flood_prediction'
+base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 data_dir = os.path.join(base_path, 'data')
 models_dir = os.path.join(base_path, 'models')
 csv_dir = os.path.join(base_path, 'csv_data')

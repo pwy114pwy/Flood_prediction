@@ -10,12 +10,14 @@ app = Flask(__name__)
 from flask_cors import CORS
 CORS(app)  # 启用CORS支持
 
+base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 # 加载模型和特征列
-model_path = 'd:\\Flood_prediction\\models\\lightgbm_model.txt'
-feature_columns_path = 'd:\\Flood_prediction\\models\\feature_columns.pkl'
+model_path = os.path.join(base_path, 'models', 'lightgbm_model.txt')
+feature_columns_path = os.path.join(base_path, 'models', 'feature_columns.pkl')
 
 # API数据路径
-api_data_dir = 'd:\\Flood_prediction\\api_data'
+api_data_dir = os.path.join(base_path, 'api_data')
 
 # 全局变量存储模型和特征列
 model = None
