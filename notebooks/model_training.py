@@ -74,7 +74,7 @@ def train_lightgbm_model(X_train, y_train, X_val, y_val, feature_columns):
     training_time = time.time() - start_time
     print(f"\n模型训练完成，耗时: {training_time:.2f}秒")
     
-    return model
+    return model, training_time
 
 # 评估模型
 def evaluate_model(model, X_test, y_test):
@@ -115,7 +115,7 @@ def analyze_feature_importance(model, feature_columns):
     return feature_importance
 
 # 保存模型
-def save_model(model, feature_importance):
+def save_model(model, feature_importance, training_time):
     """保存训练好的模型"""
     print("\n=== 保存模型 ===")
     
@@ -128,13 +128,22 @@ def save_model(model, feature_importance):
     with open('./models/feature_importance.pkl', 'wb') as f:
         pickle.dump(feature_importance, f)
     print("特征重要性已保存: feature_importance.pkl")
+    
+    # 保存训练信息
+    training_info = {
+        'training_time': training_time,
+        'best_iteration': model.num_trees()
+    }
+    with open('./models/training_info.pkl', 'wb') as f:
+        pickle.dump(training_info, f)
+    print(f"训练信息已保存: training_info.pkl (耗时: {training_time:.2f}秒)")
 
 if __name__ == "__main__":
     # 加载预处理后的数据
     X_train, y_train, X_val, y_val, X_test, y_test, feature_columns = load_preprocessed_data()
     
     # 训练LightGBM模型
-    model = train_lightgbm_model(X_train, y_train, X_val, y_val, feature_columns)
+    model, training_time = train_lightgbm_model(X_train, y_train, X_val, y_val, feature_columns)
     
     # 评估模型
     mse, rmse, r2 = evaluate_model(model, X_test, y_test)
@@ -143,6 +152,6 @@ if __name__ == "__main__":
     feature_importance = analyze_feature_importance(model, feature_columns)
     
     # 保存模型
-    save_model(model, feature_importance)
+    save_model(model, feature_importance, training_time)
     
     print("\n=== 模型训练与评估完成 ===")

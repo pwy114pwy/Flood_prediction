@@ -29,7 +29,19 @@ print("3. 加载模型...")
 model = lgb.Booster(model_file=os.path.join(models_dir, 'lightgbm_model.txt'))
 print("   模型加载完成\n")
 
-print("4. 加载预处理数据...")
+print("4. 加载训练信息...")
+try:
+    with open(os.path.join(models_dir, 'training_info.pkl'), 'rb') as f:
+        training_info_data = pickle.load(f)
+    training_time = training_info_data['training_time']
+    best_iteration = training_info_data['best_iteration']
+    print(f"   训练信息加载完成 (耗时: {training_time:.2f}秒, 最佳迭代: {best_iteration})\n")
+except FileNotFoundError:
+    training_time = 120
+    best_iteration = model.num_trees()
+    print("   训练信息文件未找到，使用默认值\n")
+
+print("5. 加载预处理数据...")
 X_train = np.load(os.path.join(data_dir, 'X_train.npy'))
 y_train = np.load(os.path.join(data_dir, 'y_train.npy'))
 X_val = np.load(os.path.join(data_dir, 'X_val.npy'))
@@ -40,7 +52,7 @@ print(f"   训练集: {len(X_train)} 行")
 print(f"   验证集: {len(X_val)} 行")
 print(f"   测试集: {len(X_test)} 行\n")
 
-print("5. 生成数据统计信息...")
+print("6. 生成数据统计信息...")
 stats = {
     "total_records": int(len(train_data)),
     "feature_count": int(len(feature_columns)),
@@ -256,8 +268,8 @@ training_info = {
     "训练数据量": f"{len(X_train):,} 行",
     "验证数据量": f"{len(X_val):,} 行",
     "测试数据量": f"{len(X_test):,} 行",
-    "训练耗时": "120 秒",
-    "最佳迭代轮数": model.num_trees(),
+    "训练耗时": f"{training_time:.2f} 秒",
+    "最佳迭代轮数": best_iteration,
     "模型文件大小": f"{model_file_size:.2f} MB"
 }
 
