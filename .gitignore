@@ -1,6 +1,12 @@
 models/**
+!models/.gitkeep
 csv_data/**
+!csv_data/.gitkeep
 data/**
+!data/.gitkeep
 api_data/**
+!api_data/.gitkeep
 analysis_data/**
+!analysis_data/.gitkeep 
 evaluation_data/**
+!evaluation_data/.gitkeep
