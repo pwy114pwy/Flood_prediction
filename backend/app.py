@@ -3,6 +3,7 @@ import lightgbm as lgb
 import numpy as np
 import pickle
 import os
+import json
 
 app = Flask(__name__)
 # 暂时注释CORS，后续安装依赖后再启用
@@ -12,6 +13,9 @@ CORS(app)  # 启用CORS支持
 # 加载模型和特征列
 model_path = 'd:\\Flood_prediction\\models\\lightgbm_model.txt'
 feature_columns_path = 'd:\\Flood_prediction\\models\\feature_columns.pkl'
+
+# API数据路径
+api_data_dir = 'd:\\Flood_prediction\\api_data'
 
 # 全局变量存储模型和特征列
 model = None
@@ -48,22 +52,9 @@ def health_check():
 def model_info():
     """返回模型信息和特征重要性"""
     try:
-        # 获取特征重要性
-        importance = model.feature_importance(importance_type='split')
-        feature_importance = list(zip(feature_columns, importance))
-        feature_importance.sort(key=lambda x: x[1], reverse=True)
-        
-        # 构建特征重要性字典
-        importance_dict = {}
-        for feature, imp in feature_importance:
-            importance_dict[feature] = int(imp)
-        
-        return jsonify({
-            "model": "LightGBM Regressor",
-            "features": feature_columns,
-            "feature_importance": importance_dict,
-            "message": "Model information retrieved successfully"
-        })
+        with open(os.path.join(api_data_dir, 'model_info.json'), 'r', encoding='utf-8') as f:
+            info = json.load(f)
+        return jsonify(info)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -137,6 +128,72 @@ def batch_predict():
         }
         
         return jsonify(response)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# 数据统计接口
+@app.route('/stats', methods=['GET'])
+def get_stats():
+    """获取数据统计信息"""
+    try:
+        with open(os.path.join(api_data_dir, 'stats.json'), 'r', encoding='utf-8') as f:
+            stats = json.load(f)
+        return jsonify(stats)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# 模型评估指标接口
+@app.route('/evaluation', methods=['GET'])
+def get_evaluation():
+    """获取模型评估指标"""
+    try:
+        with open(os.path.join(api_data_dir, 'evaluation.json'), 'r', encoding='utf-8') as f:
+            evaluation = json.load(f)
+        return jsonify(evaluation)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# 数据分布接口
+@app.route('/distribution', methods=['GET'])
+def get_distribution():
+    """获取目标变量分布"""
+    try:
+        with open(os.path.join(api_data_dir, 'distribution.json'), 'r', encoding='utf-8') as f:
+            distribution = json.load(f)
+        return jsonify(distribution)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# 特征相关性接口
+@app.route('/correlation', methods=['GET'])
+def get_correlation():
+    """获取特征相关性矩阵"""
+    try:
+        with open(os.path.join(api_data_dir, 'correlation.json'), 'r', encoding='utf-8') as f:
+            correlation = json.load(f)
+        return jsonify(correlation)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# 预测结果对比接口
+@app.route('/predictions-comparison', methods=['GET'])
+def get_predictions_comparison():
+    """获取预测值与真实值对比数据"""
+    try:
+        with open(os.path.join(api_data_dir, 'predictions_comparison.json'), 'r', encoding='utf-8') as f:
+            comparison = json.load(f)
+        return jsonify(comparison)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# 预测误差分布接口
+@app.route('/error-distribution', methods=['GET'])
+def get_error_distribution():
+    """获取预测误差分布"""
+    try:
+        with open(os.path.join(api_data_dir, 'error_distribution.json'), 'r', encoding='utf-8') as f:
+            error_dist = json.load(f)
+        return jsonify(error_dist)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

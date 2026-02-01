@@ -1,0 +1,157 @@
+{
+  "total_records": 1117957,
+  "feature_count": 20,
+  "target_variable": "FloodProbability",
+  "data_type": "结构化表格数据",
+  "data_source": "Kaggle 数据集",
+  "missing_values": "无",
+  "target_stats": {
+    "mean": 0.5044803243774135,
+    "std": 0.05102609532324065,
+    "min": 0.285,
+    "max": 0.725,
+    "median": 0.505
+  },
+  "feature_stats": {
+    "MonsoonIntensity": {
+      "mean": 4.921450467236218,
+      "std": 2.0563865429992534,
+      "min": 0,
+      "max": 16,
+      "median": 5.0
+    },
+    "TopographyDrainage": {
+      "mean": 4.9266707037927215,
+      "std": 2.0938790700615737,
+      "min": 0,
+      "max": 18,
+      "median": 5.0
+    },
+    "RiverManagement": {
+      "mean": 4.955322074104818,
+      "std": 2.0721864044221197,
+      "min": 0,
+      "max": 16,
+      "median": 5.0
+    },
+    "Deforestation": {
+      "mean": 4.942240175606038,
+      "std": 2.0516894931203122,
+      "min": 0,
+      "max": 17,
+      "median": 5.0
+    },
+    "Urbanization": {
+      "mean": 4.942516572640987,
+      "std": 2.0833909308735747,
+      "min": 0,
+      "max": 17,
+      "median": 5.0
+    },
+    "ClimateChange": {
+      "mean": 4.934093171740953,
+      "std": 2.0577418777131093,
+      "min": 0,
+      "max": 17,
+      "median": 5.0
+    },
+    "DamsQuality": {
+      "mean": 4.955877551641074,
+      "std": 2.083063034389955,
+      "min": 0,
+      "max": 16,
+      "median": 5.0
+    },
+    "Siltation": {
+      "mean": 4.927790603753096,
+      "std": 2.065991676756156,
+      "min": 0,
+      "max": 16,
+      "median": 5.0
+    },
+    "AgriculturalPractices": {
+      "mean": 4.942619438851405,
+      "std": 2.0685450637392173,
+      "min": 0,
+      "max": 16,
+      "median": 5.0
+    },
+    "Encroachments": {
+      "mean": 4.9492297109817285,
+      "std": 2.083324262294464,
+      "min": 0,
+      "max": 18,
+      "median": 5.0
+    },
+    "IneffectiveDisasterPreparedness": {
+      "mean": 4.94523850201752,
+      "std": 2.078140868731957,
+      "min": 0,
+      "max": 16,
+      "median": 5.0
+    },
+    "DrainageSystems": {
+      "mean": 4.946893306272066,
+      "std": 2.07233307359265,
+      "min": 0,
+      "max": 17,
+      "median": 5.0
+    },
+    "CoastalVulnerability": {
+      "mean": 4.953999125189967,
+      "std": 2.088898869174642,
+      "min": 0,
+      "max": 17,
+      "median": 5.0
+    },
+    "Landslides": {
+      "mean": 4.931375714808351,
+      "std": 2.078286728518441,
+      "min": 0,
+      "max": 16,
+      "median": 5.0
+    },
+    "Watersheds": {
+      "mean": 4.929032154188399,
+      "std": 2.082394744813483,
+      "min": 0,
+      "max": 16,
+      "median": 5.0
+    },
+    "DeterioratingInfrastructure": {
+      "mean": 4.925906810369272,
+      "std": 2.064812801640955,
+      "min": 0,
+      "max": 17,
+      "median": 5.0
+    },
+    "PopulationScore": {
+      "mean": 4.927519573650865,
+      "std": 2.074176390675298,
+      "min": 0,
+      "max": 18,
+      "median": 5.0
+    },
+    "WetlandLoss": {
+      "mean": 4.95085946955026,
+      "std": 2.0686958170614,
+      "min": 0,
+      "max": 19,
+      "median": 5.0
+    },
+    "InadequatePlanning": {
+      "mean": 4.9405871603290645,
+      "std": 2.081122948165523,
+      "min": 0,
+      "max": 16,
+      "median": 5.0
+    },
+    "PoliticalFactors": {
+      "mean": 4.939003915177417,
+      "std": 2.090350065428499,
+      "min": 0,
+      "max": 16,
+      "median": 5.0
+    }
+  }
+}

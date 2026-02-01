@@ -15,13 +15,13 @@
           <div class="performance-metrics">
             <el-row :gutter="20">
               <el-col :xs="24" :sm="12" :md="8" :lg="8">
-                <el-statistic :value="'0.0012'" suffix="" title="均方误差 (MSE)" />
+                <el-statistic :value="evaluationMetrics.testMetrics.mse.toFixed(4)" suffix="" title="均方误差 (MSE)" />
               </el-col>
               <el-col :xs="24" :sm="12" :md="8" :lg="8">
-                <el-statistic :value="'0.0346'" suffix="" title="均方根误差 (RMSE)" />
+                <el-statistic :value="evaluationMetrics.testMetrics.rmse.toFixed(4)" suffix="" title="均方根误差 (RMSE)" />
               </el-col>
               <el-col :xs="24" :sm="12" :md="8" :lg="8">
-                <el-statistic :value="'0.985'" suffix="" title="R² 评分" />
+                <el-statistic :value="evaluationMetrics.testMetrics.r2.toFixed(3)" suffix="" title="R² 评分" />
               </el-col>
             </el-row>
             <div
@@ -126,9 +126,12 @@
           </template>
           <div class="training-info">
             <el-descriptions :column="2" border>
-              <el-descriptions-item label="训练数据量">894,376 行</el-descriptions-item>
-              <el-descriptions-item label="验证数据量">111,785 行</el-descriptions-item>
-              <el-descriptions-item label="测试数据量">111,796 行</el-descriptions-item>
+              <el-descriptions-item label="训练数据量">{{ evaluationMetrics.dataSplits.train_size }}
+                行</el-descriptions-item>
+              <el-descriptions-item label="验证数据量">{{ evaluationMetrics.dataSplits.val_size }}
+                行</el-descriptions-item>
+              <el-descriptions-item label="测试数据量">{{ evaluationMetrics.dataSplits.test_size }}
+                行</el-descriptions-item>
               <el-descriptions-item label="训练耗时">120 秒</el-descriptions-item>
               <el-descriptions-item label="最佳迭代轮数">850</el-descriptions-item>
               <el-descriptions-item label="模型文件大小">15 MB</el-descriptions-item>
@@ -144,142 +147,151 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import * as echarts from 'echarts';
 import { DataAnalysis, TrendCharts, Histogram, Setting, Timer, Check } from '@element-plus/icons-vue';
+import axios from 'axios';
 
 let predictionsChart = null;
 let errorChart = null;
 
+// 模型评估指标
+const evaluationMetrics = ref({
+  testMetrics: { mse: 0, rmse: 0, r2: 0 },
+  trainMetrics: { mse: 0, rmse: 0, r2: 0 },
+  valMetrics: { mse: 0, rmse: 0, r2: 0 },
+  dataSplits: { trainSize: 0, valSize: 0, testSize: 0 }
+});
+
 // 初始化预测值与真实值对比图
-const initPredictionsChart = () => {
+const initPredictionsChart = async () => {
   const chartDom = document.getElementById('predictionsChart');
   if (!chartDom) return;
 
   predictionsChart = echarts.init(chartDom);
 
-  // 生成模拟数据
-  const actualValues = [];
-  const predictedValues = [];
-  for (let i = 0; i < 100; i++) {
-    const actual = 0.3 + Math.random() * 0.4;
-    const predicted = actual + (Math.random() - 0.5) * 0.05;
-    actualValues.push(actual.toFixed(3));
-    predictedValues.push(predicted.toFixed(3));
-  }
+  try {
+    const response = await axios.get('http://localhost:5000/predictions-comparison');
+    const comparisonData = response.data.comparison_data;
 
-  const option = {
-    title: {
-      text: '预测值 vs 真实值',
-      left: 'center'
-    },
-    tooltip: {
-      trigger: 'axis',
-      axisPointer: {
-        type: 'cross'
-      }
-    },
-    xAxis: {
-      type: 'value',
-      name: '真实值 (FloodProbability)',
-      min: 0.25,
-      max: 0.75
-    },
-    yAxis: {
-      type: 'value',
-      name: '预测值 (FloodProbability)',
-      min: 0.25,
-      max: 0.75
-    },
-    series: [
-      {
-        name: '预测值',
-        type: 'scatter',
-        data: actualValues.map((actual, index) => [parseFloat(actual), parseFloat(predictedValues[index])]),
-        symbolSize: 6,
-        itemStyle: {
-          color: '#409EFF'
+    const actualValues = comparisonData.map(item => item.actual);
+    const predictedValues = comparisonData.map(item => item.predicted);
+
+    const option = {
+      title: {
+        text: '预测值 vs 真实值',
+        left: 'center'
+      },
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+          type: 'cross'
         }
       },
-      {
-        name: '理想线',
-        type: 'line',
-        data: [[0.25, 0.25], [0.75, 0.75]],
-        lineStyle: {
-          color: '#F56C6C',
-          type: 'dashed',
-          width: 2
+      xAxis: {
+        type: 'value',
+        name: '真实值 (FloodProbability)',
+        min: 0.25,
+        max: 0.75
+      },
+      yAxis: {
+        type: 'value',
+        name: '预测值 (FloodProbability)',
+        min: 0.25,
+        max: 0.75
+      },
+      series: [
+        {
+          name: '预测值',
+          type: 'scatter',
+          data: actualValues.map((actual, index) => [actual, predictedValues[index]]),
+          symbolSize: 6,
+          itemStyle: {
+            color: '#409EFF'
+          }
         },
-        symbol: 'none'
-      }
-    ]
-  };
+        {
+          name: '理想线',
+          type: 'line',
+          data: [[0.25, 0.25], [0.75, 0.75]],
+          lineStyle: {
+            color: '#F56C6C',
+            type: 'dashed',
+            width: 2
+          },
+          symbol: 'none'
+        }
+      ]
+    };
 
-  predictionsChart.setOption(option);
+    predictionsChart.setOption(option);
+  } catch (error) {
+    console.error('获取预测对比数据失败:', error);
+  }
 };
 
 // 初始化误差分布图
-const initErrorChart = () => {
+const initErrorChart = async () => {
   const chartDom = document.getElementById('errorChart');
   if (!chartDom) return;
 
   errorChart = echarts.init(chartDom);
 
-  // 生成模拟误差数据
-  const errors = [];
-  for (let i = 0; i < 1000; i++) {
-    errors.push((Math.random() - 0.5) * 0.1);
+  try {
+    const response = await axios.get('http://localhost:5000/error-distribution');
+    const errorDistribution = response.data.error_distribution;
+
+    const binLabels = errorDistribution.map(item => item.range);
+    const histogram = errorDistribution.map(item => item.count);
+
+    const option = {
+      title: {
+        text: '预测误差分布',
+        left: 'center'
+      },
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+          type: 'shadow'
+        }
+      },
+      xAxis: {
+        type: 'category',
+        data: binLabels,
+        axisLabel: {
+          rotate: 45,
+          fontSize: 10
+        }
+      },
+      yAxis: {
+        type: 'value',
+        name: '频率'
+      },
+      series: [{
+        data: histogram,
+        type: 'bar',
+        itemStyle: {
+          color: '#67C23A'
+        }
+      }]
+    };
+
+    errorChart.setOption(option);
+  } catch (error) {
+    console.error('获取误差分布数据失败:', error);
   }
+};
 
-  // 计算误差分布
-  const bins = 20;
-  const binWidth = 0.1 / bins;
-  const histogram = new Array(bins).fill(0);
-
-  errors.forEach(error => {
-    const binIndex = Math.floor((error + 0.05) / binWidth);
-    if (binIndex >= 0 && binIndex < bins) {
-      histogram[binIndex]++;
-    }
-  });
-
-  const binLabels = [];
-  for (let i = 0; i < bins; i++) {
-    const start = (-0.05 + i * binWidth).toFixed(3);
-    const end = (-0.05 + (i + 1) * binWidth).toFixed(3);
-    binLabels.push(`${start}~${end}`);
+// 加载模型评估指标
+const loadEvaluationMetrics = async () => {
+  try {
+    const response = await axios.get('http://localhost:5000/evaluation');
+    evaluationMetrics.value = {
+      testMetrics: response.data.test_metrics,
+      trainMetrics: response.data.train_metrics,
+      valMetrics: response.data.val_metrics,
+      dataSplits: response.data.data_splits
+    };
+  } catch (error) {
+    console.error('获取模型评估指标失败:', error);
   }
-
-  const option = {
-    title: {
-      text: '预测误差分布',
-      left: 'center'
-    },
-    tooltip: {
-      trigger: 'axis',
-      axisPointer: {
-        type: 'shadow'
-      }
-    },
-    xAxis: {
-      type: 'category',
-      data: binLabels,
-      axisLabel: {
-        rotate: 45,
-        fontSize: 10
-      }
-    },
-    yAxis: {
-      type: 'value',
-      name: '频率'
-    },
-    series: [{
-      data: histogram,
-      type: 'bar',
-      itemStyle: {
-        color: '#67C23A'
-      }
-    }]
-  };
-
-  errorChart.setOption(option);
 };
 
 // 响应式处理
@@ -288,7 +300,10 @@ const handleResize = () => {
   errorChart?.resize();
 };
 
-onMounted(() => {
+onMounted(async () => {
+  // 加载模型评估指标
+  await loadEvaluationMetrics();
+
   // 初始化图表
   initPredictionsChart();
   initErrorChart();

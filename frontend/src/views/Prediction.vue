@@ -210,33 +210,81 @@ const predictionResult = ref(null);
 const loading = ref(false);
 
 // 特征重要性参考数据
-const topFeatures = ref([
-  {
-    feature: 'IneffectiveDisasterPreparedness',
-    importance: 8202,
-    description: '无效的灾害防范措施，对洪涝风险影响最大'
-  },
-  {
-    feature: 'Landslides',
-    importance: 8159,
-    description: '山体滑坡，可能导致泥石流和河道堵塞'
-  },
-  {
-    feature: 'Watersheds',
-    importance: 8170,
-    description: '流域管理，影响雨水的收集和排放'
-  },
-  {
-    feature: 'TopographyDrainage',
-    importance: 8149,
-    description: '地形排水能力，直接影响积水情况'
-  },
-  {
-    feature: 'PoliticalFactors',
-    importance: 8124,
-    description: '政治因素，影响灾害防范政策的制定和执行'
+const topFeatures = ref([]);
+
+// 特征描述映射
+const featureDescriptions = {
+  'IneffectiveDisasterPreparedness': '无效的灾害防范措施，对洪涝风险影响最大',
+  'Landslides': '山体滑坡，可能导致泥石流和河道堵塞',
+  'Watersheds': '流域管理，影响雨水的收集和排放',
+  'TopographyDrainage': '地形排水能力，直接影响积水情况',
+  'PoliticalFactors': '政治因素，影响灾害防范政策的制定和执行',
+  'Siltation': '河道淤积，降低排水能力',
+  'InadequatePlanning': '规划不当，导致排水系统不完善',
+  'Urbanization': '城市化程度，影响地表径流',
+  'Encroachments': '非法侵占河道，阻碍水流',
+  'DamsQuality': '大坝质量，影响防洪能力',
+  'WetlandLoss': '湿地减少，降低自然蓄水能力',
+  'DeterioratingInfrastructure': '基础设施老化，影响排水效率',
+  'CoastalVulnerability': '沿海脆弱性，受风暴潮影响',
+  'PopulationScore': '人口密度，影响灾害损失程度',
+  'DrainageSystems': '排水系统质量，直接影响排水效率',
+  'AgriculturalPractices': '农业实践，影响土壤渗透性',
+  'ClimateChange': '气候变化，导致极端天气增多',
+  'RiverManagement': '河流管理，影响水流控制',
+  'MonsoonIntensity': '季风强度，直接影响降雨量',
+  'Deforestation': '森林砍伐，降低土壤保水能力'
+};
+
+// 加载特征重要性
+const loadFeatureImportance = async () => {
+  try {
+    const response = await axios.get('http://localhost:5000/info');
+    const featureImportance = response.data.feature_importance;
+
+    // 转换数据格式并排序
+    const importanceData = Object.entries(featureImportance)
+      .map(([feature, importance]) => ({
+        feature,
+        importance,
+        description: featureDescriptions[feature] || '对洪涝风险有重要影响'
+      }))
+      .sort((a, b) => b.importance - a.importance)
+      .slice(0, 5);
+
+    topFeatures.value = importanceData;
+  } catch (error) {
+    console.error('获取特征重要性失败:', error);
+    // 使用默认数据
+    topFeatures.value = [
+      {
+        feature: 'IneffectiveDisasterPreparedness',
+        importance: 8202,
+        description: '无效的灾害防范措施，对洪涝风险影响最大'
+      },
+      {
+        feature: 'Landslides',
+        importance: 8159,
+        description: '山体滑坡，可能导致泥石流和河道堵塞'
+      },
+      {
+        feature: 'Watersheds',
+        importance: 8170,
+        description: '流域管理，影响雨水的收集和排放'
+      },
+      {
+        feature: 'TopographyDrainage',
+        importance: 8149,
+        description: '地形排水能力，直接影响积水情况'
+      },
+      {
+        feature: 'PoliticalFactors',
+        importance: 8124,
+        description: '政治因素，影响灾害防范政策的制定和执行'
+      }
+    ];
   }
-]);
+};
 
 // 计算风险等级
 const riskLevel = computed(() => {
@@ -329,8 +377,9 @@ const resetForm = () => {
   predictionResult.value = null;
 };
 
-onMounted(() => {
+onMounted(async () => {
   // 页面加载时的初始化操作
+  await loadFeatureImportance();
   console.log('Prediction page mounted');
 });
 </script>
