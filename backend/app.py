@@ -197,6 +197,28 @@ def get_error_distribution():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# 模型参数接口
+@app.route('/model-params', methods=['GET'])
+def get_model_params():
+    """获取模型参数"""
+    try:
+        with open(os.path.join(api_data_dir, 'model_params.json'), 'r', encoding='utf-8') as f:
+            params = json.load(f)
+        return jsonify(params)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# 训练信息接口
+@app.route('/training-info', methods=['GET'])
+def get_training_info():
+    """获取训练信息"""
+    try:
+        with open(os.path.join(api_data_dir, 'training_info.json'), 'r', encoding='utf-8') as f:
+            info = json.load(f)
+        return jsonify(info)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 # 主函数
 if __name__ == '__main__':
     # 初始化模型

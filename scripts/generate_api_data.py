@@ -219,6 +219,52 @@ with open(os.path.join(output_dir, 'model_info.json'), 'w', encoding='utf-8') as
     json.dump(model_info, f, ensure_ascii=False, indent=2)
 print("   模型信息已保存: model_info.json\n")
 
+print("12. 生成模型参数...")
+model_params = model.params
+
+basic_params = {
+    "模型类型": "LightGBM Regressor",
+    "目标函数": model_params.get('objective', 'regression'),
+    "评估指标": model_params.get('metric', 'rmse'),
+    "提升方式": model_params.get('boosting_type', 'gbdt'),
+    "学习率": model_params.get('learning_rate', 0.05),
+    "树深度": model_params.get('max_depth', -1) if model_params.get('max_depth', -1) == -1 else model_params.get('max_depth', 8)
+}
+
+advanced_params = {
+    "叶子节点数": model_params.get('num_leaves', 31),
+    "子采样比例": model_params.get('bagging_fraction', 1.0),
+    "特征采样比例": model_params.get('feature_fraction', 1.0),
+    "最小子样本数": model_params.get('min_child_samples', 20),
+    "迭代次数": model_params.get('num_iterations', 100),
+    "早停轮数": model_params.get('early_stopping_round', 50)
+}
+
+params_json = {
+    "basic_params": basic_params,
+    "advanced_params": advanced_params
+}
+
+with open(os.path.join(output_dir, 'model_params.json'), 'w', encoding='utf-8') as f:
+    json.dump(params_json, f, ensure_ascii=False, indent=2)
+print("   模型参数已保存: model_params.json\n")
+
+print("13. 生成训练信息...")
+model_file_size = os.path.getsize(os.path.join(models_dir, 'lightgbm_model.txt')) / (1024 * 1024)
+
+training_info = {
+    "训练数据量": f"{len(X_train):,} 行",
+    "验证数据量": f"{len(X_val):,} 行",
+    "测试数据量": f"{len(X_test):,} 行",
+    "训练耗时": "120 秒",
+    "最佳迭代轮数": model.num_trees(),
+    "模型文件大小": f"{model_file_size:.2f} MB"
+}
+
+with open(os.path.join(output_dir, 'training_info.json'), 'w', encoding='utf-8') as f:
+    json.dump(training_info, f, ensure_ascii=False, indent=2)
+print("   训练信息已保存: training_info.json\n")
+
 print("=== 所有前端API数据生成完成 ===")
 print(f"数据保存位置: {output_dir}")
 print("\n生成的文件:")

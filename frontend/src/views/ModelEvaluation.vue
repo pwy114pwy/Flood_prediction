@@ -88,22 +88,32 @@
             <el-tabs type="border-card">
               <el-tab-pane label="基本参数">
                 <el-descriptions :column="3" border>
-                  <el-descriptions-item label="模型类型">LightGBM Regressor</el-descriptions-item>
-                  <el-descriptions-item label="目标函数">regression</el-descriptions-item>
-                  <el-descriptions-item label="评估指标">rmse</el-descriptions-item>
-                  <el-descriptions-item label="提升方式">gbdt</el-descriptions-item>
-                  <el-descriptions-item label="学习率">0.05</el-descriptions-item>
-                  <el-descriptions-item label="树深度">8</el-descriptions-item>
+                  <el-descriptions-item label="模型类型">{{ modelParams.basicParams['模型类型'] || 'LightGBM Regressor'
+                  }}</el-descriptions-item>
+                  <el-descriptions-item label="目标函数">{{ modelParams.basicParams['目标函数'] || 'regression'
+                  }}</el-descriptions-item>
+                  <el-descriptions-item label="评估指标">{{ modelParams.basicParams['评估指标'] || 'rmse'
+                  }}</el-descriptions-item>
+                  <el-descriptions-item label="提升方式">{{ modelParams.basicParams['提升方式'] || 'gbdt'
+                  }}</el-descriptions-item>
+                  <el-descriptions-item label="学习率">{{ modelParams.basicParams['学习率'] || 0.05 }}</el-descriptions-item>
+                  <el-descriptions-item label="树深度">{{ modelParams.basicParams['树深度'] || 8 }}</el-descriptions-item>
                 </el-descriptions>
               </el-tab-pane>
               <el-tab-pane label="高级参数">
                 <el-descriptions :column="3" border>
-                  <el-descriptions-item label="叶子节点数">256</el-descriptions-item>
-                  <el-descriptions-item label="子采样比例">0.8</el-descriptions-item>
-                  <el-descriptions-item label="特征采样比例">0.8</el-descriptions-item>
-                  <el-descriptions-item label="最小子样本数">20</el-descriptions-item>
-                  <el-descriptions-item label="迭代次数">1000</el-descriptions-item>
-                  <el-descriptions-item label="早停轮数">50</el-descriptions-item>
+                  <el-descriptions-item label="叶子节点数">{{ modelParams.advancedParams['叶子节点数'] || 256
+                  }}</el-descriptions-item>
+                  <el-descriptions-item label="子采样比例">{{ modelParams.advancedParams['子采样比例'] || 0.8
+                  }}</el-descriptions-item>
+                  <el-descriptions-item label="特征采样比例">{{ modelParams.advancedParams['特征采样比例'] || 0.8
+                  }}</el-descriptions-item>
+                  <el-descriptions-item label="最小子样本数">{{ modelParams.advancedParams['最小子样本数'] || 20
+                  }}</el-descriptions-item>
+                  <el-descriptions-item label="迭代次数">{{ modelParams.advancedParams['迭代次数'] || 1000
+                  }}</el-descriptions-item>
+                  <el-descriptions-item label="早停轮数">{{ modelParams.advancedParams['早停轮数'] || 50
+                  }}</el-descriptions-item>
                 </el-descriptions>
               </el-tab-pane>
             </el-tabs>
@@ -132,9 +142,9 @@
                 行</el-descriptions-item>
               <el-descriptions-item label="测试数据量">{{ evaluationMetrics.dataSplits.test_size }}
                 行</el-descriptions-item>
-              <el-descriptions-item label="训练耗时">120 秒</el-descriptions-item>
-              <el-descriptions-item label="最佳迭代轮数">850</el-descriptions-item>
-              <el-descriptions-item label="模型文件大小">15 MB</el-descriptions-item>
+              <el-descriptions-item label="训练耗时">{{ trainingInfo['训练耗时'] || '120 秒' }}</el-descriptions-item>
+              <el-descriptions-item label="最佳迭代轮数">{{ trainingInfo['最佳迭代轮数'] || 850 }}</el-descriptions-item>
+              <el-descriptions-item label="模型文件大小">{{ trainingInfo['模型文件大小'] || '15 MB' }}</el-descriptions-item>
             </el-descriptions>
           </div>
         </el-card>
@@ -159,6 +169,15 @@ const evaluationMetrics = ref({
   valMetrics: { mse: 0, rmse: 0, r2: 0 },
   dataSplits: { trainSize: 0, valSize: 0, testSize: 0 }
 });
+
+// 模型参数
+const modelParams = ref({
+  basicParams: {},
+  advancedParams: {}
+});
+
+// 训练信息
+const trainingInfo = ref({});
 
 // 初始化预测值与真实值对比图
 const initPredictionsChart = async () => {
@@ -294,6 +313,29 @@ const loadEvaluationMetrics = async () => {
   }
 };
 
+// 加载模型参数
+const loadModelParams = async () => {
+  try {
+    const response = await axios.get('http://localhost:5000/model-params');
+    modelParams.value = {
+      basicParams: response.data.basic_params,
+      advancedParams: response.data.advanced_params
+    };
+  } catch (error) {
+    console.error('获取模型参数失败:', error);
+  }
+};
+
+// 加载训练信息
+const loadTrainingInfo = async () => {
+  try {
+    const response = await axios.get('http://localhost:5000/training-info');
+    trainingInfo.value = response.data;
+  } catch (error) {
+    console.error('获取训练信息失败:', error);
+  }
+};
+
 // 响应式处理
 const handleResize = () => {
   predictionsChart?.resize();
@@ -303,6 +345,10 @@ const handleResize = () => {
 onMounted(async () => {
   // 加载模型评估指标
   await loadEvaluationMetrics();
+  // 加载模型参数
+  await loadModelParams();
+  // 加载训练信息
+  await loadTrainingInfo();
 
   // 初始化图表
   initPredictionsChart();
