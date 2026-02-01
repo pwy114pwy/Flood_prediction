@@ -1,0 +1,6 @@
+# Flask后端服务依赖
+Flask==2.3.3
+Flask-CORS==4.0.0
+lightgbm==4.1.0
+numpy==1.26.3
+scikit-learn==1.4.0
