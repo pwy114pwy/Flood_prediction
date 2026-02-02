@@ -274,6 +274,55 @@ cd notebooks
 python model_evaluation.py
 ```
 
+### 5. bayesian_optimization.py - 贝叶斯参数优化
+
+**作用**：使用贝叶斯优化算法自动搜索LightGBM模型的最优参数组合，提高模型预测准确率。
+
+**主要功能**：
+- **数据加载**：
+  - 加载预处理后的训练集、验证集和测试集
+  - 加载特征列信息
+- **贝叶斯优化**：
+  - 定义参数搜索空间（最大深度、叶子节点数、学习率等8个关键参数）
+  - 使用贝叶斯优化算法搜索最优参数组合
+  - 初始化采样点：10个
+  - 优化迭代次数：50次
+  - 目标函数：最小化验证集RMSE
+- **最终模型训练**：
+  - 使用优化后的最佳参数训练最终模型
+  - 合并训练集和验证集以增加训练数据
+  - 最大迭代次数：2000（配合早停策略）
+- **模型评估**：
+  - 在测试集上计算最终评估指标（MSE、RMSE、R²）
+  - 比较优化前后的性能提升
+- **结果保存**：
+  - 保存优化后的模型为 `lightgbm_model_optimized.txt`
+  - 保存优化信息（最佳参数、训练时间、评估指标）到 `optimization_info.pkl`
+
+**优化参数搜索空间**：
+| 参数 | 搜索范围 |
+|------|----------|
+| max_depth | 6-12 |
+| num_leaves | 64-512 |
+| learning_rate | 0.01-0.1 |
+| min_child_samples | 10-50 |
+| subsample | 0.6-0.9 |
+| colsample_bytree | 0.6-0.9 |
+| lambda_l1 | 0.0-0.1 |
+| lambda_l2 | 0.0-1.0 |
+
+**输出文件**：
+- `models/lightgbm_model_optimized.txt` - 优化后的LightGBM模型
+- `models/optimization_info.pkl` - 优化信息（最佳参数、评估指标等）
+
+**使用方法**：
+```bash
+cd notebooks
+python bayesian_optimization.py
+```
+
+**预期效果**：通过系统性参数搜索，可在现有基础上提升模型性能，R²评分有望从0.838提升至0.85-0.87。
+
 ## Scripts 脚本说明
 
 ### 1. generate_api_data.py - API数据生成脚本
@@ -510,13 +559,20 @@ cd notebooks
 python model_evaluation.py
 ```
 
-### 5. 生成API数据
+### 5. 贝叶斯参数优化（可选）
+```bash
+cd notebooks
+python bayesian_optimization.py
+```
+**注意**：此步骤会耗时较长（约1-2小时），但可显著提升模型性能。
+
+### 6. 生成API数据
 ```bash
 cd scripts
 python generate_api_data.py
 ```
 
-### 6. 启动后端服务
+### 7. 启动后端服务
 ```bash
 cd backend
 pip install -r requirements.txt
@@ -524,7 +580,7 @@ python app.py
 ```
 服务将在 `http://localhost:5000` 启动。
 
-### 7. 启动前端服务
+### 8. 启动前端服务
 ```bash
 cd frontend
 npm install
@@ -538,9 +594,10 @@ npm run dev
 2. **特征工程**：运行 `feature_engineering.py` 进行数据预处理和划分
 3. **模型训练**：运行 `model_training.py` 训练LightGBM模型
 4. **模型评估**：运行 `model_evaluation.py` 评估模型性能
-5. **生成API数据**：运行 `generate_api_data.py` 生成前端所需数据
-6. **启动后端**：运行 `backend/app.py` 启动API服务
-7. **启动前端**：运行 `npm run dev` 启动前端服务
+5. **贝叶斯参数优化**（可选）：运行 `bayesian_optimization.py` 优化模型参数
+6. **生成API数据**：运行 `generate_api_data.py` 生成前端所需数据
+7. **启动后端**：运行 `backend/app.py` 启动API服务
+8. **启动前端**：运行 `npm run dev` 启动前端服务
 
 ## 项目亮点
 
