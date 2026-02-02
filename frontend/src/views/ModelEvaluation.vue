@@ -402,7 +402,7 @@ const initTrainingCurveChart = async () => {
       },
       legend: {
         data: ['训练集', '验证集'],
-        top: 30
+        top: 40
       },
       xAxis: {
         type: 'value',
