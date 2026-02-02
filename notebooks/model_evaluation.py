@@ -4,6 +4,11 @@ from sklearn.metrics import mean_squared_error, r2_score
 import pickle
 import matplotlib.pyplot as plt
 import seaborn as sns
+import os
+base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+data_dir = os.path.join(base_path, 'data')
+models_dir = os.path.join(base_path, 'models')
+evaluation_dir = os.path.join(base_path, 'evaluation_data')
 
 # 设置中文字体
 plt.rcParams['font.sans-serif'] = ['SimHei']
@@ -14,15 +19,15 @@ def load_preprocessed_data():
     """加载预处理后的数据"""
     print("正在加载预处理后的数据...")
     
-    X_train = np.load('./data/X_train.npy')
-    y_train = np.load('./data/y_train.npy')
-    X_val = np.load('./data/X_val.npy')
-    y_val = np.load('./data/y_val.npy')
-    X_test = np.load('./data/X_test.npy')
-    y_test = np.load('./data/y_test.npy')
+    X_train = np.load(os.path.join(data_dir, 'X_train.npy'))
+    y_train = np.load(os.path.join(data_dir, 'y_train.npy'))
+    X_val = np.load(os.path.join(data_dir, 'X_val.npy'))
+    y_val = np.load(os.path.join(data_dir, 'y_val.npy'))
+    X_test = np.load(os.path.join(data_dir, 'X_test.npy'))
+    y_test = np.load(os.path.join(data_dir, 'y_test.npy'))
     
     # 加载特征列
-    with open('./models/feature_columns.pkl', 'rb') as f:
+    with open(os.path.join(models_dir, 'feature_columns.pkl'), 'rb') as f:
         feature_columns = pickle.load(f)
     
     return X_train, y_train, X_val, y_val, X_test, y_test, feature_columns
@@ -31,7 +36,7 @@ def load_preprocessed_data():
 def load_trained_model():
     """加载训练好的模型"""
     print("正在加载训练好的模型...")
-    model_path = './models/lightgbm_model.txt'
+    model_path = os.path.join(models_dir, 'lightgbm_model.txt')
     model = lgb.Booster(model_file=model_path)
     print(f"模型加载完成: {model_path}")
     return model
@@ -102,7 +107,7 @@ def visualize_feature_importance(model, feature_columns):
     plt.xlabel('重要性得分')
     plt.ylabel('特征名称')
     plt.tight_layout()
-    plt.savefig('./evaluation_data/feature_importance.png', dpi=150)
+    plt.savefig(os.path.join(evaluation_dir, 'feature_importance.png'), dpi=150)
     plt.close()
     print("特征重要性图已保存: feature_importance.png")
     
@@ -138,7 +143,7 @@ def analyze_predictions(model, X_test, y_test):
     plt.xlabel('真实值 (FloodProbability)')
     plt.ylabel('预测值 (FloodProbability)')
     plt.grid(True, alpha=0.3)
-    plt.savefig('./evaluation_data/predictions_vs_actual.png', dpi=150)
+    plt.savefig(os.path.join(evaluation_dir, 'predictions_vs_actual.png'), dpi=150)
     plt.close()
     print("预测值与真实值散点图已保存: predictions_vs_actual.png")
     
@@ -149,7 +154,7 @@ def analyze_predictions(model, X_test, y_test):
     plt.xlabel('误差 (真实值 - 预测值)')
     plt.ylabel('频率')
     plt.grid(True, alpha=0.3)
-    plt.savefig('./evaluation_data/error_distribution.png', dpi=150)
+    plt.savefig(os.path.join(evaluation_dir, 'error_distribution.png'), dpi=150)
     plt.close()
     print("预测误差分布图已保存: error_distribution.png")
 

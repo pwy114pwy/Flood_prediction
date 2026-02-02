@@ -2,12 +2,17 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
 import pickle
+import os
+base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+csv_dir = os.path.join(base_path, 'csv_data')
+data_dir = os.path.join(base_path, 'data')
+models_dir = os.path.join(base_path, 'models')
 
 print("开始特征工程与数据预处理...")
 
 # 加载数据
 print("加载数据...")
-chunks = pd.read_csv('./csv_data/train.csv', chunksize=100000)
+chunks = pd.read_csv(os.path.join(csv_dir, 'train.csv'), chunksize=100000)
 df_list = []
 for chunk in chunks:
     df_list.append(chunk)
@@ -48,17 +53,17 @@ print(f"测试集大小：{len(X_test)} ({len(X_test)/len(df)*100:.1f}%)")
 print("\n保存预处理后的数据...")
 
 # 保存特征列
-with open('models/feature_columns.pkl', 'wb') as f:
+with open(os.path.join(models_dir, 'feature_columns.pkl'), 'wb') as f:
     pickle.dump(X.columns.tolist(), f)
 print("已保存特征列")
 
 # 保存数据划分结果
-np.save('data/X_train.npy', X_train.values)
-np.save('data/y_train.npy', y_train.values)
-np.save('data/X_val.npy', X_val.values)
-np.save('data/y_val.npy', y_val.values)
-np.save('data/X_test.npy', X_test.values)
-np.save('data/y_test.npy', y_test.values)
+np.save(os.path.join(data_dir, 'X_train.npy'), X_train.values)
+np.save(os.path.join(data_dir, 'y_train.npy'), y_train.values)
+np.save(os.path.join(data_dir, 'X_val.npy'), X_val.values)
+np.save(os.path.join(data_dir, 'y_val.npy'), y_val.values)
+np.save(os.path.join(data_dir, 'X_test.npy'), X_test.values)
+np.save(os.path.join(data_dir, 'y_test.npy'), y_test.values)
 print("已保存数据划分结果")
 
 print("\n特征工程与数据预处理完成！")

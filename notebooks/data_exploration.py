@@ -2,6 +2,10 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import os
+base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+csv_dir = os.path.join(base_path, 'csv_data')
+analysis_dir = os.path.join(base_path, 'analysis_data')
 
 # 设置中文字体
 plt.rcParams['font.sans-serif'] = ['SimHei']
@@ -45,7 +49,7 @@ def target_analysis(df, target_col='FloodProbability'):
     plt.title(f'{target_col} 分布')
     plt.xlabel(target_col)
     plt.ylabel('频率')
-    plt.savefig('./analysis_data/target_distribution.png')
+    plt.savefig(os.path.join(analysis_dir, 'target_distribution.png'))
     plt.close()
     print("目标变量分布图已保存: target_distribution.png")
 
@@ -61,13 +65,13 @@ def correlation_analysis(df):
     plt.figure(figsize=(12, 10))
     sns.heatmap(corr_matrix, annot=False, cmap='coolwarm', linewidths=0.5)
     plt.title('特征相关性热力图')
-    plt.savefig('./analysis_data/correlation_heatmap.png')
+    plt.savefig(os.path.join(analysis_dir, 'correlation_heatmap.png'))
     plt.close()
     print("特征相关性热力图已保存: correlation_heatmap.png")
 
 if __name__ == "__main__":
     # 加载训练数据
-    train_df = load_data('./csv_data/train.csv', nrows=100000)
+    train_df = load_data(os.path.join(csv_dir, 'train.csv'), nrows=100000)
     
     # 基本信息分析
     basic_info_analysis(train_df)

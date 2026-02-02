@@ -77,6 +77,25 @@
       </el-col>
     </el-row>
 
+    <!-- 训练曲线 -->
+    <el-row :gutter="20" style="margin-bottom: 20px">
+      <el-col :xs="24" :sm="24" :md="24" :lg="24">
+        <el-card shadow="hover" style="border-radius: 8px">
+          <template #header>
+            <div class="card-header">
+              <el-icon>
+                <TrendCharts />
+              </el-icon>
+              <span style="margin-left: 8px; font-weight: bold">训练曲线</span>
+            </div>
+          </template>
+          <div class="training-curve">
+            <div id="trainingCurveChart" style="width: 100%; height: 400px"></div>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
+
     <!-- 模型参数配置 -->
     <el-row :gutter="20" style="margin-bottom: 20px">
       <el-col :xs="24" :sm="24" :md="24" :lg="24">
@@ -166,6 +185,7 @@ import axios from 'axios';
 
 let predictionsChart = null;
 let errorChart = null;
+let trainingCurveChart = null;
 
 // 模型评估指标
 const evaluationMetrics = ref({
@@ -354,6 +374,74 @@ const initErrorChart = async () => {
   }
 };
 
+// 初始化训练曲线图表
+const initTrainingCurveChart = async () => {
+  const chartDom = document.getElementById('trainingCurveChart');
+  if (!chartDom) return;
+
+  trainingCurveChart = echarts.init(chartDom);
+
+  try {
+    const response = await axios.get('http://localhost:5000/training-curve');
+    const curveData = response.data;
+
+    const iterations = curveData.iterations;
+    const trainRmse = curveData.train_rmse;
+    const valRmse = curveData.val_rmse;
+
+    const option = {
+      title: {
+        text: '训练曲线 (RMSE)',
+        left: 'center'
+      },
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+          type: 'cross'
+        }
+      },
+      legend: {
+        data: ['训练集', '验证集'],
+        top: 30
+      },
+      xAxis: {
+        type: 'value',
+        name: '迭代次数',
+        min: 0
+      },
+      yAxis: {
+        type: 'value',
+        name: 'RMSE',
+        min: 0
+      },
+      series: [
+        {
+          name: '训练集',
+          type: 'line',
+          data: iterations.map((iter, index) => [iter, trainRmse[index]]),
+          smooth: true,
+          itemStyle: {
+            color: '#409EFF'
+          }
+        },
+        {
+          name: '验证集',
+          type: 'line',
+          data: iterations.map((iter, index) => [iter, valRmse[index]]),
+          smooth: true,
+          itemStyle: {
+            color: '#67C23A'
+          }
+        }
+      ]
+    };
+
+    trainingCurveChart.setOption(option);
+  } catch (error) {
+    console.error('获取训练曲线数据失败:', error);
+  }
+};
+
 // 加载模型评估指标
 const loadEvaluationMetrics = async () => {
   try {
@@ -396,6 +484,7 @@ const loadTrainingInfo = async () => {
 const handleResize = () => {
   predictionsChart?.resize();
   errorChart?.resize();
+  trainingCurveChart?.resize();
 };
 
 onMounted(async () => {
@@ -409,6 +498,7 @@ onMounted(async () => {
   // 初始化图表
   initPredictionsChart();
   initErrorChart();
+  initTrainingCurveChart();
 
   // 监听窗口大小变化
   window.addEventListener('resize', handleResize);
@@ -418,6 +508,7 @@ onUnmounted(() => {
   // 销毁图表实例
   predictionsChart?.dispose();
   errorChart?.dispose();
+  trainingCurveChart?.dispose();
 
   // 移除事件监听
   window.removeEventListener('resize', handleResize);
@@ -437,6 +528,7 @@ onUnmounted(() => {
 .performance-metrics,
 .predictions-vs-actual,
 .error-distribution,
+.training-curve,
 .model-params,
 .training-info {
   padding: 10px 0;

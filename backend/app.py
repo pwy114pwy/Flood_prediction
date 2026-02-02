@@ -232,6 +232,17 @@ def get_csv_info():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# 训练曲线数据接口
+@app.route('/training-curve', methods=['GET'])
+def get_training_curve():
+    """获取训练曲线数据"""
+    try:
+        with open(os.path.join(api_data_dir, 'training_curve.json'), 'r', encoding='utf-8') as f:
+            curve_data = json.load(f)
+        return jsonify(curve_data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 # 主函数
 if __name__ == '__main__':
     # 初始化模型
