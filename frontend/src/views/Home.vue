@@ -154,11 +154,7 @@ import axios from 'axios';
 const router = useRouter();
 
 // 数据文件信息
-const dataInfo = ref([
-  { name: 'train.csv', size: '59.1 MB', records: '1,117,958' },
-  { name: 'test.csv', size: '36.1 MB', records: '~400,000' },
-  { name: 'sample_submission.csv', size: '8.9 MB', records: '~400,000' }
-]);
+const dataInfo = ref([]);
 
 // 系统统计数据
 const systemStats = ref({
@@ -173,6 +169,16 @@ const modelInfo = ref({
   targetVariable: '',
   apiService: ''
 });
+
+//加载dataInfo信息
+const loadDataInfo = async () => {
+  try {
+    const response = await axios.get('http://localhost:5000/csv-info');
+    dataInfo.value = response.data;
+  } catch (error) {
+    console.error('获取数据文件信息失败:', error);
+  }
+};
 
 // 加载数据统计
 const loadStats = async () => {
@@ -221,6 +227,7 @@ const navigateTo = (path) => {
 
 onMounted(async () => {
   // 页面加载时的初始化操作
+  await loadDataInfo();
   await loadStats();
   await loadEvaluation();
   await loadModelInfo();

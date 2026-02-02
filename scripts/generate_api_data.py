@@ -4,6 +4,7 @@ import lightgbm as lgb
 import pickle
 import json
 import os
+from pathlib import Path
 from sklearn.metrics import mean_squared_error, r2_score
 
 base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -83,7 +84,7 @@ with open(os.path.join(output_dir, 'stats.json'), 'w', encoding='utf-8') as f:
     json.dump(stats, f, ensure_ascii=False, indent=2)
 print("   数据统计信息已保存: stats.json\n")
 
-print("6. 生成模型评估指标...")
+print("7. 生成模型评估指标...")
 y_pred_train = model.predict(X_train)
 y_pred_val = model.predict(X_val)
 y_pred_test = model.predict(X_test)
@@ -115,7 +116,7 @@ with open(os.path.join(output_dir, 'evaluation.json'), 'w', encoding='utf-8') as
     json.dump(evaluation, f, ensure_ascii=False, indent=2)
 print("   模型评估指标已保存: evaluation.json\n")
 
-print("7. 生成目标变量分布...")
+print("8. 生成目标变量分布...")
 target_data = train_data['FloodProbability'].values
 bins = [0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7]
 labels = ['0.3-0.35', '0.35-0.4', '0.4-0.45', '0.45-0.5', '0.5-0.55', '0.55-0.6', '0.6-0.65', '0.65-0.7']
@@ -141,7 +142,7 @@ with open(os.path.join(output_dir, 'distribution.json'), 'w', encoding='utf-8') 
     json.dump(distribution_data, f, ensure_ascii=False, indent=2)
 print("   目标变量分布已保存: distribution.json\n")
 
-print("8. 生成特征相关性矩阵...")
+print("9. 生成特征相关性矩阵...")
 feature_data = train_data[feature_columns]
 correlation_matrix = feature_data.corr()
 
@@ -163,7 +164,7 @@ with open(os.path.join(output_dir, 'correlation.json'), 'w', encoding='utf-8') a
     json.dump(correlation_json, f, ensure_ascii=False, indent=2)
 print("   特征相关性矩阵已保存: correlation.json\n")
 
-print("9. 生成预测值与真实值对比数据...")
+print("10. 生成预测值与真实值对比数据...")
 sample_size = min(100, len(y_test))
 np.random.seed(42)
 indices = np.random.choice(len(y_test), sample_size, replace=False)
@@ -184,7 +185,7 @@ with open(os.path.join(output_dir, 'predictions_comparison.json'), 'w', encoding
     json.dump(comparison_json, f, ensure_ascii=False, indent=2)
 print("   预测值与真实值对比数据已保存: predictions_comparison.json\n")
 
-print("10. 生成预测误差分布...")
+print("11. 生成预测误差分布...")
 errors = y_test - y_pred_test
 bins_count = 20
 bin_width = 0.1 / bins_count
@@ -214,7 +215,7 @@ with open(os.path.join(output_dir, 'error_distribution.json'), 'w', encoding='ut
     json.dump(error_distribution_json, f, ensure_ascii=False, indent=2)
 print("   预测误差分布已保存: error_distribution.json\n")
 
-print("11. 生成模型信息...")
+print("12. 生成模型信息...")
 importance = model.feature_importance(importance_type='split')
 feature_importance_dict = {}
 for feature, imp in zip(feature_columns, importance):
@@ -231,7 +232,7 @@ with open(os.path.join(output_dir, 'model_info.json'), 'w', encoding='utf-8') as
     json.dump(model_info, f, ensure_ascii=False, indent=2)
 print("   模型信息已保存: model_info.json\n")
 
-print("12. 生成模型参数...")
+print("13. 生成模型参数...")
 model_params = model.params
 
 basic_params = {
@@ -261,7 +262,7 @@ with open(os.path.join(output_dir, 'model_params.json'), 'w', encoding='utf-8') 
     json.dump(params_json, f, ensure_ascii=False, indent=2)
 print("   模型参数已保存: model_params.json\n")
 
-print("13. 生成训练信息...")
+print("14. 生成训练信息...")
 model_file_size = os.path.getsize(os.path.join(models_dir, 'lightgbm_model.txt')) / (1024 * 1024)
 
 training_info = {
@@ -276,6 +277,26 @@ training_info = {
 with open(os.path.join(output_dir, 'training_info.json'), 'w', encoding='utf-8') as f:
     json.dump(training_info, f, ensure_ascii=False, indent=2)
 print("   训练信息已保存: training_info.json\n")
+
+print("15. 生成csv信息...")
+csv_folder = Path(csv_dir)
+csv_info = []
+# 遍历所有 .csv 文件
+for csv_file in csv_folder.glob("*.csv"):
+        size_bytes = csv_file.stat().st_size
+        # 只读第一列加速，避免加载整个大文件
+        row_count = len(pd.read_csv(csv_file, usecols=[0], dtype=str))
+
+        csv_info.append({
+            "name": csv_file.name,
+            "size": f"{size_bytes/1024/1024:.2f} MB",
+            "records": row_count
+        }) 
+with open(os.path.join(output_dir, 'csv_info.json'), "w", encoding="utf-8") as f:
+    json.dump(csv_info, f, indent=2, ensure_ascii=False)
+print("   csv信息已保存: csv_info.json\n")
+
+
 
 print("=== 所有前端API数据生成完成 ===")
 print(f"数据保存位置: {output_dir}")
