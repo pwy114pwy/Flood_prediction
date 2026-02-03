@@ -148,6 +148,31 @@
       </el-col>
     </el-row>
 
+    <!-- SHAP 贡献度分析 -->
+    <el-row :gutter="20" style="margin-bottom: 20px" v-if="predictionResult">
+      <el-col :span="24">
+        <el-card shadow="hover" style="border-radius: 8px">
+          <template #header>
+            <div class="card-header">
+              <el-icon><Histogram /></el-icon>
+              <span style="margin-left: 8px; font-weight: bold">特征贡献度分析 (SHAP)</span>
+              <el-tooltip content="SHAP值表示该特征对预测结果的贡献。正值增加洪涝概率（红色），负值降低概率（蓝色）。" placement="top">
+                <el-icon style="margin-left: 5px; cursor: help"><QuestionFilled /></el-icon>
+              </el-tooltip>
+            </div>
+          </template>
+          <div style="display: flex; flex-direction: column; align-items: center">
+            <div id="shap-chart" style="width: 100%; height: 400px"></div>
+            <div style="margin-top: 10px; font-size: 14px; color: #606266; text-align: center">
+              <p>基准概率 (Base Value): <strong>{{ (predictionResult.base_value * 100).toFixed(2) }}%</strong></p>
+              <p>当前预测 (Output Value): <strong>{{ (predictionResult.prediction * 100).toFixed(2) }}%</strong></p>
+               <p style="margin-top: 5px"><small>* 计算公式：预测结果 = 基准概率 + 所有特征贡献之和</small></p>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
+
     <!-- 特征重要性参考 -->
     <el-row :gutter="20">
       <el-col :xs="24" :sm="24" :md="24" :lg="24">
@@ -177,9 +202,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, nextTick, watch } from 'vue';
 import axios from 'axios';
-import { MagicStick, Check, Refresh, Delete, Rank } from '@element-plus/icons-vue';
+import * as echarts from 'echarts';
+import { MagicStick, Check, Refresh, Delete, Rank, Histogram, QuestionFilled } from '@element-plus/icons-vue';
 
 // 表单数据
 const formData = ref({
@@ -208,6 +234,7 @@ const formData = ref({
 // 预测结果
 const predictionResult = ref(null);
 const loading = ref(false);
+let shapChart = null;
 
 // 特征重要性参考数据
 const topFeatures = ref([]);
@@ -321,6 +348,91 @@ const progressColor = computed(() => {
 const formatProgress = (percentage) => {
   return `${percentage}%`;
 };
+
+// 初始化 SHAP 图表
+const initShapChart = () => {
+  if (!predictionResult.value || !predictionResult.value.shap_values) return;
+  
+  const chartDom = document.getElementById('shap-chart');
+  if (!chartDom) return;
+  
+  if (!shapChart) {
+    shapChart = echarts.init(chartDom);
+  }
+  
+  const data = Object.entries(predictionResult.value.shap_values)
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => Math.abs(a.value) - Math.abs(b.value)); // 按绝对值排序，小的在下面
+    
+  const option = {
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'shadow' },
+      formatter: (params) => {
+        const item = params[0];
+        const val = (item.value * 100).toFixed(4);
+        return `${item.name}: ${val}%`;
+      }
+    },
+    grid: {
+      left: '3%',
+      right: '4%',
+      bottom: '3%',
+      top: '5%',
+      containLabel: true
+    },
+    xAxis: {
+      type: 'value',
+      name: '贡献度',
+      axisLabel: {
+        formatter: (value) => (value * 100).toFixed(1) + '%'
+      }
+    },
+    yAxis: {
+      type: 'category',
+      data: data.map(d => d.name),
+      axisTick: { show: false }
+    },
+    series: [
+      {
+        name: 'SHAP Value',
+        type: 'bar',
+        data: data.map(d => ({
+          value: d.value,
+          itemStyle: {
+            color: d.value > 0 ? '#F56C6C' : '#409EFF' // 红色增加风险，蓝色降低风险
+          }
+        })),
+        label: {
+          show: true,
+          position: 'right',
+          formatter: (params) => {
+            const val = (params.value * 100).toFixed(2);
+             return val > 0 ? `+${val}%` : `${val}%`;
+          }
+        }
+      }
+    ]
+  };
+  
+  shapChart.setOption(option);
+};
+
+// 监听预测结果变化，更新图表
+watch(predictionResult, () => {
+  if (predictionResult.value) {
+    nextTick(() => {
+      initShapChart();
+    });
+  }
+});
+
+// 监听窗口大小变化
+window.addEventListener('resize', () => {
+  if (shapChart) {
+    shapChart.resize();
+  }
+});
 
 // 预测函数
 const predict = async () => {

@@ -4,6 +4,7 @@ import numpy as np
 import pickle
 import os
 import json
+import shap
 
 app = Flask(__name__)
 # 暂时注释CORS，后续安装依赖后再启用
@@ -22,6 +23,7 @@ api_data_dir = os.path.join(base_path, 'api_data')
 # 全局变量存储模型和特征列
 model = None
 feature_columns = None
+explainer = None
 
 # 初始化函数，加载模型和特征列
 def init_model():
@@ -37,6 +39,11 @@ def init_model():
         with open(feature_columns_path, 'rb') as f:
             feature_columns = pickle.load(f)
         print(f"特征列加载成功: {feature_columns}")
+        
+        # 初始化 SHAP 解释器
+        global explainer
+        explainer = shap.TreeExplainer(model)
+        print("SHAP 解释器初始化成功")
         
         return True
     except Exception as e:
@@ -85,10 +92,19 @@ def predict():
         # 进行预测
         prediction = model.predict(features_array)[0]
         
+        # 计算 SHAP 值
+        shap_values = explainer.shap_values(features_array)
+        # 对于回归模型，shap_values 返回的是 (samples, features)
+        # 如果是某些版本的 shap，可能会返回一个列表，取第一个
+        if isinstance(shap_values, list):
+            shap_values = shap_values[0]
+            
         # 构建响应
         response = {
             "prediction": float(prediction),
             "features": dict(zip(feature_columns, features)),
+            "shap_values": dict(zip(feature_columns, shap_values[0].tolist())),
+            "base_value": float(explainer.expected_value),
             "message": "Prediction completed successfully"
         }
         
