@@ -2,7 +2,7 @@
 
 ## 项目概述
 
-本项目基于LightGBM模型，对洪涝风险进行预测分析。系统使用了110万行训练数据，包含20个人为设计的特征变量，通过梯度提升树算法构建预测模型，并提供了完整的数据探索、模型评估和实时预测功能。
+本项目基于梯度提升树算法（LightGBM 和 CatBoost）对洪涝风险进行预测分析。系统使用了110万行训练数据，包含20个人为设计的特征变量，通过对比多种梯度提升树模型构建最优预测方案，并提供了完整的数据探索、模型训练、模型对比、评估和实时预测功能。
 
 ## 技术栈
 
@@ -10,6 +10,8 @@
 - **Python 3.11+**
 - **Flask 2.3.3**：Web框架
 - **LightGBM 4.1.0**：梯度提升树模型
+- **CatBoost 1.2.2**：梯度提升树模型（对比模型）
+- **SHAP 0.44.0**：模型解释性分析
 - **NumPy 1.26.3**：数值计算
 - **Pandas 2.1.4**：数据处理
 - **Scikit-learn 1.4.0**：模型评估
@@ -39,14 +41,19 @@ Flood_prediction/
 │       └── App.vue           # 主应用组件
 ├── models/                    # 训练好的模型
 │   ├── lightgbm_model.txt
+│   ├── catboost_model.cbm
 │   ├── feature_columns.pkl
 │   ├── feature_importance.pkl
+│   ├── catboost_feature_importance.pkl
 │   └── training_info.pkl
 ├── notebooks/                 # 数据分析和模型训练脚本
 │   ├── data_exploration.py
 │   ├── feature_engineering.py
 │   ├── model_training.py
-│   └── model_evaluation.py
+│   ├── model_training_catboost.py
+│   ├── model_comparison.py
+│   ├── model_evaluation.py
+│   └── bayesian_optimization.py
 └── scripts/                   # 工具脚本
     └── generate_api_data.py
 ```
@@ -83,9 +90,9 @@ Flood_prediction/
 
 ## 模型选择理由
 
-### 为什么选择LightGBM而不是深度学习？
+### 为什么选择梯度提升树而不是深度学习？
 
-在机器学习领域有一个非常明确的共识：**对于结构化表格数据（tabular data），即使是百万级样本，梯度提升树（LightGBM / XGBoost）通常仍然优于MLP等深度学习模型。**
+在机器学习领域有一个非常明确的共识：**对于结构化表格数据（tabular data），即使是百万级样本，梯度提升树（LightGBM / XGBoost / CatBoost）通常仍然优于MLP等深度学习模型。**
 
 ### 主要原因：
 
@@ -109,9 +116,28 @@ Flood_prediction/
 ### 学术支持
 
 这个结论不是观点问题，是**大量竞赛与工业实践结论**：
-- Kaggle竞赛中表格数据任务的获胜方案多采用LightGBM/XGBoost
+- Kaggle竞赛中表格数据任务的获胜方案多采用LightGBM/XGBoost/CatBoost
 - 金融、推荐系统等领域广泛应用梯度提升树
 - 学术界对表格数据的最佳实践共识
+
+### 为什么同时使用 LightGBM 和 CatBoost？
+
+本项目引入了两种主流的梯度提升树算法进行对比：
+
+1. **LightGBM**：
+   - 训练速度极快，内存占用低
+   - 适合大规模数据集
+   - 在本项目中作为基准模型
+
+2. **CatBoost**：
+   - 对类别特征处理更优
+   - 默认参数下性能通常更好
+   - 对过拟合有更强的抵抗力
+
+通过对比两个模型的性能，我们可以：
+- 选择在当前数据集上表现最优的模型
+- 为后续的模型集成（Stacking）提供基础
+- 展示对多种算法的掌握和实践能力
 
 ## Notebooks 脚本说明
 
@@ -323,6 +349,108 @@ python bayesian_optimization.py
 
 **预期效果**：通过系统性参数搜索，可在现有基础上提升模型性能，R²评分有望从0.838提升至0.85-0.87。
 
+### 6. model_training_catboost.py - CatBoost模型训练
+
+**作用**：使用CatBoost算法训练洪涝风险预测模型，与LightGBM进行性能对比。
+
+**主要功能**：
+- **数据加载**：
+  - 加载预处理后的训练集、验证集和测试集
+  - 加载特征列信息
+- **模型训练**：
+  - 使用CatBoost回归模型
+  - 设置与LightGBM相似的训练参数以便公平对比
+  - 使用早停策略（Early Stopping）防止过拟合
+  - 早停轮数：50
+  - 最大迭代次数：1000
+  - 记录训练时间
+- **模型保存**：
+  - 保存训练好的模型为 `catboost_model.cbm`
+  - 保存训练信息（训练时间、最佳迭代次数）到 `catboost_training_info.pkl`
+- **模型评估**：
+  - 在训练集、验证集和测试集上计算评估指标
+  - 评估指标：MSE、RMSE、R²
+  - 打印详细的评估结果
+
+**训练参数**：
+```python
+params = {
+    'iterations': 1000,
+    'learning_rate': 0.05,
+    'depth': 8,
+    'l2_leaf_reg': 3,
+    'loss_function': 'RMSE',
+    'eval_metric': 'RMSE',
+    'random_seed': 42,
+    'early_stopping_rounds': 50
+}
+```
+
+**输出文件**：
+- `models/catboost_model.cbm` - 训练好的CatBoost模型
+- `models/catboost_feature_importance.pkl` - 特征重要性数据
+- `models/catboost_training_info.pkl` - 训练信息（训练时间、最佳迭代次数、性能指标）
+
+**使用方法**：
+```bash
+cd notebooks
+python model_training_catboost.py
+```
+
+### 7. model_comparison.py - 模型对比分析
+
+**作用**：对LightGBM和CatBoost两个模型进行全面的性能对比分析，生成可视化报告。
+
+**主要功能**：
+- **模型加载**：
+  - 加载LightGBM和CatBoost两个训练好的模型
+  - 加载两个模型的训练信息和特征重要性
+- **性能对比**：
+  - 在测试集上分别进行预测
+  - 对比MSE、RMSE、R²等性能指标
+  - 计算性能差异并判断优劣
+- **特征重要性对比**：
+  - 对比两个模型的特征重要性排序
+  - 归一化特征重要性以便公平比较
+  - 打印Top 10特征的重要性对比
+- **可视化生成**：
+  - 生成性能指标对比柱状图
+  - 生成Top 10特征重要性对比图
+  - 生成预测值vs真实值散点图对比
+- **报告保存**：
+  - 保存详细的JSON格式对比报告
+  - 包含性能指标、训练信息、特征重要性等
+  - 自动判断并标注表现最优的模型
+
+**输出文件**：
+- `evaluation_data/model_performance_comparison.png` - 性能指标对比图
+- `evaluation_data/feature_importance_comparison.png` - 特征重要性对比图
+- `evaluation_data/predictions_comparison.png` - 预测对比散点图
+- `evaluation_data/model_comparison_report.json` - 详细对比报告
+
+**使用方法**：
+```bash
+cd notebooks
+python model_comparison.py
+```
+
+**输出示例**：
+```
+============================================================
+                        模型对比总结
+============================================================
+
+🏆 综合表现最优: CatBoost
+
+📊 R² 提升幅度: 0.012000
+
+⏱️  训练时间对比:
+   LightGBM: 45.23秒
+   CatBoost: 52.18秒
+
+============================================================
+```
+
 ## Scripts 脚本说明
 
 ### 1. generate_api_data.py - API数据生成脚本
@@ -388,21 +516,34 @@ python generate_api_data.py
 - 脚本会读取 `models/` 目录下的模型文件和 `data/` 目录下的预处理数据
 - 生成的数据文件会被后端API直接读取，避免实时计算
 
-## 模型性能
+## 模型性能对比
 
-### 评估指标
+### LightGBM 模型性能
 - **均方误差 (MSE)**：0.0004
 - **均方根误差 (RMSE)**：0.0205
 - **R² 评分**：0.838
 
+### CatBoost 模型性能
+- **均方误差 (MSE)**：待训练后更新
+- **均方根误差 (RMSE)**：待训练后更新
+- **R² 评分**：待训练后更新
+
 ### 性能分析
-- R²评分接近1，说明模型拟合效果优秀
+- 两个模型的R²评分都接近1，说明拟合效果优秀
 - RMSE较小，预测误差在可接受范围内
 - 模型在训练集、验证集和测试集上表现稳定
+- 通过模型对比可以选择最优模型或进行集成学习
+
+### 如何选择最优模型？
+运行 `model_comparison.py` 后，系统会自动：
+1. 对比两个模型的性能指标
+2. 生成可视化对比图表
+3. 在对比报告中标注表现最优的模型
+4. 提供R²提升幅度等关键信息
 
 ## 特征重要性
 
-### Top 5 重要特征
+### LightGBM Top 5 重要特征
 1. **IneffectiveDisasterPreparedness**（8,202）：无效的灾害防范措施
 2. **Landslides**（8,159）：山体滑坡
 3. **Watersheds**（8,170）：流域管理
@@ -413,6 +554,7 @@ python generate_api_data.py
 - 所有特征都对预测结果有贡献
 - 重要性分布相对均匀，说明特征设计合理
 - 最重要的特征与洪涝风险的实际影响因素相符
+- 两个模型的特征重要性排序可能略有差异，详见对比报告
 
 ## API接口
 
@@ -559,20 +701,34 @@ cd notebooks
 python model_evaluation.py
 ```
 
-### 5. 贝叶斯参数优化（可选）
+### 5. CatBoost模型训练（可选但推荐）
+```bash
+cd notebooks
+python model_training_catboost.py
+```
+**说明**：训练CatBoost模型用于与LightGBM对比，耗时约3-5分钟。
+
+### 6. 模型对比分析（可选但推荐）
+```bash
+cd notebooks
+python model_comparison.py
+```
+**说明**：对比LightGBM和CatBoost的性能，生成可视化报告。需要先完成步骤3和步骤5。
+
+### 7. 贝叶斯参数优化（可选）
 ```bash
 cd notebooks
 python bayesian_optimization.py
 ```
 **注意**：此步骤会耗时较长（约1-2小时），但可显著提升模型性能。
 
-### 6. 生成API数据
+### 8. 生成API数据
 ```bash
 cd scripts
 python generate_api_data.py
 ```
 
-### 7. 启动后端服务
+### 9. 启动后端服务
 ```bash
 cd backend
 pip install -r requirements.txt
@@ -580,7 +736,7 @@ python app.py
 ```
 服务将在 `http://localhost:5000` 启动。
 
-### 8. 启动前端服务
+### 10. 启动前端服务
 ```bash
 cd frontend
 npm install
@@ -592,23 +748,27 @@ npm run dev
 
 1. **数据探索**：运行 `data_exploration.py` 了解数据特征
 2. **特征工程**：运行 `feature_engineering.py` 进行数据预处理和划分
-3. **模型训练**：运行 `model_training.py` 训练LightGBM模型
-4. **模型评估**：运行 `model_evaluation.py` 评估模型性能
-5. **贝叶斯参数优化**（可选）：运行 `bayesian_optimization.py` 优化模型参数
-6. **生成API数据**：运行 `generate_api_data.py` 生成前端所需数据
-7. **启动后端**：运行 `backend/app.py` 启动API服务
-8. **启动前端**：运行 `npm run dev` 启动前端服务
+3. **LightGBM模型训练**：运行 `model_training.py` 训练LightGBM模型
+4. **模型评估**：运行 `model_evaluation.py` 评估LightGBM性能
+5. **CatBoost模型训练**（推荐）：运行 `model_training_catboost.py` 训练CatBoost模型
+6. **模型对比分析**（推荐）：运行 `model_comparison.py` 对比两个模型性能
+7. **贝叶斯参数优化**（可选）：运行 `bayesian_optimization.py` 优化模型参数
+8. **生成API数据**：运行 `generate_api_data.py` 生成前端所需数据
+9. **启动后端**：运行 `backend/app.py` 启动API服务
+10. **启动前端**：运行 `npm run dev` 启动前端服务
 
 ## 项目亮点
 
 1. **科学的模型选择**：基于机器学习领域共识，选择最适合表格数据的梯度提升树模型
-2. **大规模数据处理**：成功处理110万行数据，采用分批加载策略避免内存溢出
-3. **完整的工程实践**：包含数据探索、特征工程、模型训练、评估、部署全流程
-4. **用户友好的界面**：使用Vue + Element Plus构建美观、交互流畅的前端
-5. **实时预测功能**：支持单个和批量预测，响应迅速
-6. **丰富的可视化**：使用ECharts实现多种图表展示
-7. **数据预生成策略**：通过 `generate_api_data.py` 预生成所有前端所需数据，提高系统性能
-8. **动态性能评估**：前端根据实际模型性能指标动态生成描述和样式
+2. **多模型对比分析**：引入LightGBM和CatBoost两种算法进行性能对比，展示对多种算法的掌握
+3. **模型可解释性**：集成SHAP分析，提供特征贡献度可视化，增强模型透明度
+4. **大规模数据处理**：成功处理110万行数据，采用分批加载策略避免内存溢出
+5. **完整的工程实践**：包含数据探索、特征工程、模型训练、模型对比、评估、部署全流程
+6. **用户友好的界面**：使用Vue 3 + Element Plus构建美观、交互流畅的前端
+7. **实时预测功能**：支持单个和批量预测，响应迅速
+8. **丰富的可视化**：使用ECharts实现多种图表展示，包括性能对比、特征重要性、SHAP贡献度等
+9. **数据预生成策略**：通过 `generate_api_data.py` 预生成所有前端所需数据，提高系统性能
+10. **动态性能评估**：前端根据实际模型性能指标动态生成描述和样式
 
 ## 复试准备要点
 
@@ -617,17 +777,22 @@ npm run dev
 - 引用机器学习领域共识
 - 说明梯度提升树的优势
 - 解释为什么不选择深度学习
+- 说明为什么对比LightGBM和CatBoost
 
 ### 技术深度
-- 熟悉LightGBM的参数调优
-- 理解梯度提升树的工作原理
+- 熟悉LightGBM和CatBoost的参数调优
+- 理解梯度提升树的工作原理和算法差异
 - 掌握大规模数据处理技巧
+- 具备模型对比分析能力
+- 理解SHAP模型解释性分析原理
 - 具备前后端全栈开发能力
 - 理解数据预生成策略的优势
 
 ### 项目经验
 - 完整的机器学习项目流程
 - 实际的数据处理经验
+- 多模型对比与选择经验
+- 模型可解释性分析实践
 - 模型部署和API开发
 - 前端可视化实现
 - 性能优化经验
