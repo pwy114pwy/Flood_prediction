@@ -4,6 +4,28 @@
 
 本项目基于梯度提升树算法（LightGBM 和 CatBoost）对洪涝风险进行预测分析。系统使用了110万行训练数据，包含20个人为设计的特征变量，通过对比多种梯度提升树模型构建最优预测方案，并提供了完整的数据探索、模型训练、模型对比、评估和实时预测功能。
 
+## 🖼️ 运行效果
+
+<div align="center">
+  <img src="assets/images/web_demo.png" width="800px" alt="Web 界面演示">
+  <p>图 1：首页</p>
+</div>
+
+<div align="center">
+  <img src="assets/images/detection_results.png" width="800px" alt="检测结果展示">
+  <p>图 2：数据探索</p>
+</div>
+
+<div align="center">
+  <img src="assets/images/detection_results.png" width="800px" alt="检测结果展示">
+  <p>图 3：模型评估</p>
+</div>
+
+<div align="center">
+  <img src="assets/images/detection_results.png" width="800px" alt="检测结果展示">
+  <p>图 4：预测分析</p>
+</div>
+
 ## 技术栈
 
 ### 后端技术栈
