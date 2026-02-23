@@ -7,22 +7,22 @@
 ## 🖼️ 运行效果
 
 <div align="center">
-  <img src="assets/images/web_demo.png" width="800px" alt="Web 界面演示">
+  <img src="assets/images/demo_1.png" width="800px" alt="Web 界面演示">
   <p>图 1：首页</p>
 </div>
 
 <div align="center">
-  <img src="assets/images/detection_results.png" width="800px" alt="检测结果展示">
+  <img src="assets/images/demo_2.png" width="800px" alt="检测结果展示">
   <p>图 2：数据探索</p>
 </div>
 
 <div align="center">
-  <img src="assets/images/detection_results.png" width="800px" alt="检测结果展示">
+  <img src="assets/images/demo_3.png" width="800px" alt="检测结果展示">
   <p>图 3：模型评估</p>
 </div>
 
 <div align="center">
-  <img src="assets/images/detection_results.png" width="800px" alt="检测结果展示">
+  <img src="assets/images/demo_4.png" width="800px" alt="检测结果展示">
   <p>图 4：预测分析</p>
 </div>
 
