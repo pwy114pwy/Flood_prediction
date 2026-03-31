@@ -38,18 +38,32 @@ def train_lightgbm_model(X_train, y_train, X_val, y_val, feature_columns):
     
     # 设置训练参数
     params = {
+        # 'objective': 'regression',
+        # 'metric': 'rmse',
+        # 'boosting_type': 'gbdt',
+        # 'learning_rate': 0.05,
+        # 'max_depth': 8,
+        # 'num_leaves': 256,
+        # 'subsample': 0.8,
+        # 'colsample_bytree': 0.8,
+        # 'min_child_samples': 20,
+        # 'n_estimators': 1000,
+        # 'random_state': 42,
+        # 'verbose': -1
         'objective': 'regression',
         'metric': 'rmse',
         'boosting_type': 'gbdt',
-        'learning_rate': 0.05,
-        'max_depth': 8,
-        'num_leaves': 256,
+        'learning_rate': 0.01,
+        'max_depth': -1,
+        'num_leaves': 255,
         'subsample': 0.8,
         'colsample_bytree': 0.8,
-        'min_child_samples': 20,
-        'n_estimators': 1000,
+        'min_child_samples': 15,
+        'n_estimators': 5000,
         'random_state': 42,
-        'verbose': -1
+        'verbose': -1,
+        'reg_alpha': 0.05,           # 加 L1 正则
+        'reg_lambda': 0.1,          # 加 L2 正则
     }
     
     # 创建数据集

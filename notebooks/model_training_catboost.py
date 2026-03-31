@@ -39,6 +39,15 @@ def train_catboost_model(X_train, y_train, X_val, y_val, feature_columns):
     
     # 设置训练参数
     params = {
+        # 'iterations': 1000,
+        # 'learning_rate': 0.05,
+        # 'depth': 8,
+        # 'l2_leaf_reg': 3,
+        # 'loss_function': 'RMSE',
+        # 'eval_metric': 'RMSE',
+        # 'random_seed': 42,
+        # 'early_stopping_rounds': 50,
+        # 'verbose': 100
         'iterations': 1000,
         'learning_rate': 0.05,
         'depth': 8,
